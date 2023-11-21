@@ -37,14 +37,6 @@
         }
       };
 
-      const isFinish = (cells) => {
-        let res = undefined
-        cells.forEach(element => {
-          if(!element) res = true
-        });
-        return res
-      }
-
       const startCells = [null, null, null, null, null, null, null, null, null];
 
       function App() {
@@ -55,19 +47,6 @@
         const [winnerSequence, setWinnerSequence] = React.useState();
 
         const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
-
-        const getSymbolClassName = (symbol) => {
-          if (symbol === SYMBOL_O) return "symbol--o";
-          if (symbol === SYMBOL_X) return "symbol--x";
-          return "";
-        };
-
-        const renderSymdol = (symbol) => (
-          <span className={"symbol ${getSymbolClassName(symbol)}"}>
-            {" "}
-            {symbol}{" "}
-          </span>
-        );
 
         const handleCellClick = (index) => {
           if (cells[index] || winnerSequence) return;
@@ -82,37 +61,82 @@
         const handlerClearClick = () => {
           setCells(startCells);
           setCurrentStep(SYMBOL_X);
-          setWinnerSequence()
+          setWinnerSequence();
         };
         const winnerSymbol = winnerSequence
           ? cells[winnerSequence[0]]
           : undefined;
 
+        const isDraw =
+          !winnerSequence && cells.filter((value) => value).length === 9;
+
         return (
           <div className="game">
-            <div className="game-info">
-              {winnerSequence ? "Победитель" : isFinish(cells) ? "Ход" : "Ничья"}{" "} {winnerSequence ? '': isFinish(cells) ? currentStep : ''}
-              {renderSymdol(winnerSymbol) ?? currentStep}
-            </div>
+            <GameInfo
+              isDraw={isDraw}
+              winnerSymbol={winnerSymbol}
+              currentStep={currentStep}
+            />
             <div className="game-field">
-              {cells.map((symbol, index) => {
-                const isWinner = winnerSequence?.includes(index);
-                return (
-                  <button
-                    key={index}
-                    className={`cell ${isWinner ? "cell--win" : ""}`}
-                    onClick={() => handleCellClick(index)}
-                  >
-                    {symbol ? renderSymdol(symbol) : null}
-                  </button>
-                );
-              })}
+              {cells.map((symbol, index) => (
+                <GameCell
+                  key={index}
+                  isWinner={winnerSequence?.includes(index)}
+                  onClick={() => {
+                    handleCellClick(index);
+                  }}
+                  symbol={symbol}
+                />
+              ))}
             </div>
             <button className="clear" onClick={() => handlerClearClick()}>
               {" "}
               Очистить{" "}
             </button>
           </div>
+        );
+      }
+
+      function GameInfo({ isDraw, winnerSymbol, currentStep }) {
+        if (isDraw) {
+          return <div className="game-info">Ничья</div>;
+        }
+        if (winnerSymbol) {
+          return (
+            <div className="game-info">
+              "Победитель" <GameSymbol symbol={winnerSymbol} />
+            </div>
+          );
+        }
+        return (
+          <div className="game-info">
+            Ход: <GameSymbol symbol={currentStep} />
+          </div>
+        );
+      }
+
+      function GameCell({ isWinner, onClick, symbol }) {
+        return (
+          <button
+            className={`cell ${isWinner ? "cell--win" : ""}`}
+            onClick={onClick}
+          >
+            {symbol ? <GameSymbol symbol={symbol} /> : null}
+          </button>
+        );
+      }
+
+      function GameSymbol({ symbol }) {
+        const getSymbolClassName = (symbol) => {
+          if (symbol === SYMBOL_O) return "symbol--o";
+          if (symbol === SYMBOL_X) return "symbol--x";
+          return "";
+        };
+        return (
+          <span className={`symbol ${getSymbolClassName(symbol)}`}>
+            {" "}
+            {symbol}{" "}
+          </span>
         );
       }
 
